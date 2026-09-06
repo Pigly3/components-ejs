@@ -19,22 +19,13 @@ Components specify where to display the elements inside of them:
   </div>
 ```
 
-All attribtues on the component (except for src, which determines the component) are passed through to the component:
-```html
-  <div <%- stringifyAttributes() %>>
-    <%- innerHTML %>
-  </div>
-```
-
-It can also consume attributes, removing them from the `stringifyAttributes()` output and allowing the component to use them in a different place than the other attributes. Attributes should be consumed at the top of the file to ensure they are fully consumed.
+Components can consume attributes, allowing the component to use them internally.
 ```html
 <% const attrs = consumeAttributes("id", "class") %>
 <% const name = consumeAttribute("name") %>
-
-<div <%- stringifyAttributes() %>>
-  <%- innerHTML %>
-</div>
 ```
+
+Any attributes which are not consumed will be applied to the component's container `component` element when rendering.
 
 The package provides the following exported functions:
 ```typescript

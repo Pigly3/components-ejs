@@ -27,11 +27,6 @@ const utilEJS = /*js*/`
       }
       return out
     }
-    function stringifyAttributes() {
-      let out = ""
-      for (const attribute in attributes) out += attribute + '="' + attributes[attribute] + '"'
-      return out
-    }
   %>
 `
 
@@ -58,7 +53,11 @@ async function renderComponent(path:string, args:Record<string, any>, ejsOptions
 
   const data = await render(utilEJS + componentData, args, path, ejsOptions, true, scope)
 
-  return `<component scope="${scope}">${data}</component>`
+  const attributes = args.attributes
+  let attributeString = ""
+  for (const attribute in attributes) attributeString += attribute + '="' + attributes[attribute] + '"'
+  
+  return `<component scope="${scope}" ${attributeString}>${data}</component>`
 }
 
 function modifyComponentHTML(src:string, scope:string): string{
