@@ -1,5 +1,14 @@
 import { readFile } from "node:fs/promises"
 const ejs = require("ejs")
+const crypto = require("crypto")
+
+const boilerplateHTML = /*html*/`
+<style>
+  component {
+    display: inline-block;
+  }
+</style>
+`
 
 const utilEJS = /*js*/`
   <%
@@ -42,8 +51,27 @@ async function replaceAll(str:string, regex:RegExp, replacer:Function){
   return out + str.slice(lastIndex)
 }
 
-export async function render(src:string, args={}, path="raw", ejsOptions={}): Promise<string> {
-  const data = ejs.render(src, args, ejsOptions)
+async function renderComponent(path:string, args:Record<string, any>, ejsOptions={}){
+  const componentData = await readFile(path, "utf8")
+
+  const scope = (Date.now() % 1000).toString() + crypto.randomBytes(8).toString("base64")
+
+  const data = await render(utilEJS + componentData, args, path, ejsOptions, true, scope)
+
+  return `<component scope="${scope}">${data}</component>`
+}
+
+function modifyComponentHTML(src:string, scope:string): string{
+  return src.replace(/<style([\s\S]*?)>([\s\S]*?)<\/style>/g, `<style$1>@scope ([scope="${scope}"]){$2}</style>`)
+}
+
+export async function render(src:string, args={}, path="raw", ejsOptions={}, _isComponent=false, _scope=""): Promise<string> {
+  let data = ejs.render(src, args, ejsOptions)
+  
+  if (_isComponent) {
+    data = modifyComponentHTML(data, _scope)
+  } else data = boilerplateHTML + data
+
   return await replaceAll(data, /<Component([\s\S]*?)>([\s\S]*?)<\/Component>/g, async (match:string, p1:string, p2:string) => {
     const attributes:Record<string, string> =  {}
 
@@ -66,9 +94,7 @@ export async function render(src:string, args={}, path="raw", ejsOptions={}): Pr
     componentArgs["attributes"] = attributes
     componentArgs["innerHTML"] = p2
 
-    const componentData = await readFile(componentSrc, "utf8")
-
-    return await render(utilEJS + componentData, componentArgs, componentSrc, ejsOptions)
+    return await renderComponent(componentSrc, componentArgs, ejsOptions)
   })
 }
 
