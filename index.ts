@@ -118,10 +118,7 @@ export async function render(src:string, args={}, path="raw", ejsOptions={}, _is
     componentArgs["attributes"] = attributes
     componentArgs["innerHTML"] = p2
 
-
-    let out = await renderComponent(componentSrc, componentArgs, ejsOptions)
-    console.log(out)
-    return out
+    return await renderComponent(componentSrc, componentArgs, ejsOptions)
   })
 }
 
