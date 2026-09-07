@@ -21,7 +21,7 @@ Components specify where to display the elements inside of them:
   </div>
 ```
 
-Some components do not allow `innerHTML`. For these components, a closing tag is not needed:
+Some components do not allow `innerHTML` (void components). For these components, the following syntax can be used:
 ```html
 <Component src="slider.ejs" />
 ```

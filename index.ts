@@ -89,42 +89,36 @@ export async function render(src:string, args={}, path="raw", ejsOptions={}, _is
     data = modifyComponentHTML(data, _scope)
   } else data = boilerplateHTML + data
 
-  return await replaceAll(await replaceAll(data, /<Component([\s\S]*?)\/>/g, async (match: string, p1:string) => {
+  for (const match of data.matchAll(/<Component\b((?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^"'<>])*)>/g)) {
+    const tag = match[0]
+    const p1 = match[1]
+
     const attributes = getAttributes(p1)
 
     if (!attributes.src) {
       console.error(`Cannot load component in ${path} without source.`)
-      return
+      return "Error!"
     }
 
     const componentSrc:string = attributes.src
     const componentArgs:Record<string,any> = attributes.args ? JSON.parse(attributes.args) : {}
-    
+      
     delete attributes.src
     delete attributes.args
 
     componentArgs["attributes"] = attributes
 
-    return await renderComponent(componentSrc, componentArgs, ejsOptions)
-  }), /<Component([\s\S]*?)>([\s\S]*?)<\/Component>/g, async (match:string, p1:string, p2:string) => {
-    const attributes = getAttributes(p1)
+    if (p1[p1.length-1] == "/") {
+      data = data.replace(tag, await renderComponent(componentSrc, componentArgs, ejsOptions))
+      console.log(`replaced ${tag}`)
+    } else {
+      console.log({match:data.match(/<Component([\s\S]*?)>([\s\S]*?)<\/Component>/),data:data})
+      componentArgs["innerHTML"] = data.match(/<Component([\s\S]*?)>([\s\S]*?)<\/Component>/)[2]
 
-    if (!attributes.src) {
-      console.error(`Cannot load component in ${path} without source.`)
-      return
+      data = data.replace(tag + componentArgs["innerHTML"]+"</Component>", await renderComponent(componentSrc, componentArgs, ejsOptions))
     }
-
-    const componentSrc:string = attributes.src
-    const componentArgs:Record<string,any> = attributes.args ? JSON.parse(attributes.args) : {}
-    
-    delete attributes.src
-    delete attributes.args
-
-    componentArgs["attributes"] = attributes
-    componentArgs["innerHTML"] = p2
-
-    return await renderComponent(componentSrc, componentArgs, ejsOptions)
-  })
+  }
+  return data
 }
 
 export async function renderFile(path:string, args={}, ejsOptions={}): Promise<string> {
