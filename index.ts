@@ -29,7 +29,7 @@ const utilEJS = /*js*/`
     }
 
     function attr(name) {
-      const value = consumeAttribute(value)
+      const value = consumeAttribute(name)
       return value ? name + '="' + value + '"' : ""
     }
   %>
