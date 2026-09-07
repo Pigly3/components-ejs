@@ -67,6 +67,16 @@ function modifyComponentHTML(src:string, scope:string): string{
   })
 }
 
+function getAttributes(p1:string) {
+  const attributes:Record<string, string> =  {}
+  const attributeRegex = /([A-z]*)="((?:\\.|[^"\\])*)"/g
+  const matches:Array<Array<string>> = [...p1.matchAll(attributeRegex)]
+
+  for (const match of matches) attributes[match[1] as string] = (match[2] as string)
+
+  return attributes
+}
+
 export async function render(src:string, args={}, path="raw", ejsOptions={}, _isComponent=false, _scope=""): Promise<string> {
   let data = ejs.render(src, args, ejsOptions)
   
@@ -74,13 +84,25 @@ export async function render(src:string, args={}, path="raw", ejsOptions={}, _is
     data = modifyComponentHTML(data, _scope)
   } else data = boilerplateHTML + data
 
-  return await replaceAll(data, /<Component([\s\S]*?)>([\s\S]*?)<\/Component>/g, async (match:string, p1:string, p2:string) => {
-    const attributes:Record<string, string> =  {}
+  return await replaceAll(await replaceAll(data, /<Component([\s\S]*?)\/>/g, async (match: string, p1:string) => {
+    const attributes = getAttributes(p1)
 
-    const attributeRegex = /([A-z]*)="((?:\\.|[^"\\])*)"/g
-    const matches:Array<Array<string>> = [...p1.matchAll(attributeRegex)]
+    if (!attributes.src) {
+      console.error(`Cannot load component in ${path} without source.`)
+      return
+    }
 
-    for (const match of matches) attributes[match[1] as string] = (match[2] as string)
+    const componentSrc:string = attributes.src
+    const componentArgs:Record<string,any> = attributes.args ? JSON.parse(attributes.args) : {}
+    
+    delete attributes.src
+    delete attributes.args
+
+    componentArgs["attributes"] = attributes
+
+    return await renderComponent(componentSrc, componentArgs, ejsOptions)
+  }), /<Component([\s\S]*?)>([\s\S]*?)<\/Component>/g, async (match:string, p1:string, p2:string) => {
+    const attributes = getAttributes(p1)
 
     if (!attributes.src) {
       console.error(`Cannot load component in ${path} without source.`)
@@ -96,7 +118,10 @@ export async function render(src:string, args={}, path="raw", ejsOptions={}, _is
     componentArgs["attributes"] = attributes
     componentArgs["innerHTML"] = p2
 
-    return await renderComponent(componentSrc, componentArgs, ejsOptions)
+
+    let out = await renderComponent(componentSrc, componentArgs, ejsOptions)
+    console.log(out)
+    return out
   })
 }
 
