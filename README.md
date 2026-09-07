@@ -38,6 +38,16 @@ Components can consume attributes, allowing the component to use them internally
 <% const name = consumeAttribute("name") %>
 ```
 
+The `attr` function is also provided for easier use, which, for ease of use, is equivalent to:
+```js
+const value = consumeAttribute(name)
+value ? `${name}="${value}"` : ""
+```
+This function allows for much simpler code:
+```html
+<button <%- attr("class") %>></button>
+```
+
 Any attributes which are not consumed will be applied to the component's container `component` element when rendering.
 
 ## Package Documentation
