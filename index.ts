@@ -17,7 +17,7 @@ const utilEJS = /*js*/`
       if (temp) {
         delete attributes[name]
         return temp
-      } else return ""
+      } else return
     }
 
     function consumeAttributes(...names){
