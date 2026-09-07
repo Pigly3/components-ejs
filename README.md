@@ -10,7 +10,7 @@ Adds components on top of EJS.
 </Component>
 ```
 
-All `style` elements inside of components have their styles scoped to the component.
+All `style` elements inside of components have their styles scoped to the component unless they have the `global` attribute.
 
 Components specify where to display the elements inside of them:
 ```html

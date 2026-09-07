@@ -61,7 +61,10 @@ async function renderComponent(path:string, args:Record<string, any>, ejsOptions
 }
 
 function modifyComponentHTML(src:string, scope:string): string{
-  return src.replace(/<style([\s\S]*?)>([\s\S]*?)<\/style>/g, `<style$1>@scope ([scope="${scope}"]){$2}</style>`)
+  return src.replace(/<style([\s\S]*?)>([\s\S]*?)<\/style>/g, (match, p1, p2) => {
+    if (p1.split(" ").includes("global")) return `<style${p1}>${p2}</style>`
+    return `<style${p1}>@scope ([scope="${scope}"]){${p2}}</style>`
+  })
 }
 
 export async function render(src:string, args={}, path="raw", ejsOptions={}, _isComponent=false, _scope=""): Promise<string> {
