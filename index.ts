@@ -110,9 +110,7 @@ export async function render(src:string, args={}, path="raw", ejsOptions={}, _is
 
     if (p1[p1.length-1] == "/") {
       data = data.replace(tag, await renderComponent(componentSrc, componentArgs, ejsOptions))
-      console.log(`replaced ${tag}`)
     } else {
-      console.log({match:data.match(/<Component([\s\S]*?)>([\s\S]*?)<\/Component>/),data:data})
       componentArgs["innerHTML"] = data.match(/<Component([\s\S]*?)>([\s\S]*?)<\/Component>/)[2]
 
       data = data.replace(tag + componentArgs["innerHTML"]+"</Component>", await renderComponent(componentSrc, componentArgs, ejsOptions))
